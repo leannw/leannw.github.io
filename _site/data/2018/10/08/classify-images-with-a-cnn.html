@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Classify Images With A CNN</title>
+  <meta name="description" content="Image classification using a CNN &amp; all of the dumb questions I had to Google in order to get here.Built in Python using Keras">
+
+  
+  
+  <link rel="stylesheet" href="http://localhost:4000/assets/style.css">
+
+  <link rel="canonical" href="http://localhost:4000/data/2018/10/08/classify-images-with-a-cnn.html">
+  <link rel="alternate" type="application/rss+xml" title="leann k. woo" href="http://localhost:4000/feed.xml">
+
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+</head>
+
+
+  <body>
+
+    <header class="px-2 clearfix">
+  <div class="left sm-width-full py-1 mt-1 mt-lg-0">
+    <a class="align-middle link-primary text-accent" href="/">
+      leann k. woo
+    </a>
+  </div>
+  <div class="right sm-width-full">
+    <ul class="list-reset mt-lg-1 mb-2 mb-lg-1">
+      
+        
+      
+        
+        <li class="inline-block">
+          <a class="align-middle link-primary mr-2 mr-lg-0 ml-lg-2" href="/about/">
+            About
+          </a>
+        </li>
+        
+      
+        
+        <li class="inline-block">
+          <a class="align-middle link-primary mr-2 mr-lg-0 ml-lg-2" href="/design/">
+            Design
+          </a>
+        </li>
+        
+      
+        
+      
+        
+      
+        
+      
+    </ul>
+  </div>
+</header>
+
+
+    <div>
+      <article class="container px-2 mx-auto mb4" itemscope itemtype="https://schema.org/BlogPosting">
+  <h1 class="h0 col-9 sm-width-full py-4 mt-3 inline-block" itemprop="name headline">Classify Images With A CNN</h1>
+  <div class="col-4 sm-width-full mt-1 border-top-thin ">
+    <p class="mb-3 py-2 bold h4"><time datetime="2018-10-08T00:00:00-07:00" itemprop="datePublished">Oct 8, 2018</time></p>
+  </div>
+
+  <div class="prose" itemprop="articleBody">
+      <h2 id="image-classification-using-a-cnn--all-of-the-dumb-questions-i-had-to-google-in-order-to-get-here">Image classification using a CNN &amp; all of the dumb questions I had to Google in order to get here.</h2>
+<h4 id="built-in-python-using-keras">Built in <code class="highlighter-rouge">Python</code> using <code class="highlighter-rouge">Keras</code></h4>
+<p><br /></p>
+
+<p>It’s been a long journey to get to where I am today, but I finally have some results to show for it! While I’ll refrain from describing the project in relation to Dr. Alfaro’s lab, I am excited to share my work in a more general sense. I want to talk about the problems that I couldn’t solve with a quick Google search, so if you’re looking for something comprehensive, mosey on. For this post, we will be classifying two classes of fish: Labridae and Gobiidae.</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td><img src="http://localhost:4000/images/lab.jpg" alt="labridae" width="90%" /></td>
+      <td><img src="http://localhost:4000/images/gob.jpg" alt="gob" width="100%" /></td>
+    </tr>
+    <tr>
+      <td><span style="color:black;font-size:0.9em;text-align:center;">Labridae</span></td>
+      <td><span style="color:black;font-size:0.9em;">Gobiidae</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>First of all, I’m going to assume that you know the basics of neural networks and CNNs. If not, let me guide you <a href="https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/" style="color: red">here</a>. I felt that all of the concepts are clearly explained and easy to understand (If I can understand it, so can you!).</p>
+
+<p>So here we go:</p>
+
+<h3 id="part-1-data-preparation">Part 1: Data preparation</h3>
+<p><br /></p>
+
+<p>I thought that this would be easy with a quick Google search, but I must have been using the wrong search phrase because I could not, for the life of me, figure out how to import my images easily. Most of the tutorials on CNNs used pre-packaged datasets that were built in with functions to resize, or that were already cropped and ready to go. Since I was dealing with images that were stored on my local machine, I had to figure out the steps necessary to clean my dataset. They turned out to be:</p>
+
+<ol>
+  <li><em>Walk through a directory and get the path of every image</em></li>
+  <li><em>Convert the image to pixel data</em></li>
+  <li><em>Resize the image to a standard length and width</em></li>
+</ol>
+
+<p>I had used a few different functions to do the same task, but I settled with the <code class="highlighter-rouge">walk</code> function from the <code class="highlighter-rouge">os</code> library and the <code class="highlighter-rouge">cv2</code> library from <code class="highlighter-rouge">opencv</code>.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">walk</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+
+<span class="c">#Don't forget to change these paths!</span>
+<span class="n">lab</span> <span class="o">=</span> <span class="s">"~/Labridae"</span>
+<span class="n">gob</span> <span class="o">=</span> <span class="s">"~/Gobiidae"</span>
+
+<span class="n">fish_paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="n">lab</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)):</span>
+        <span class="n">lab_img</span> <span class="o">=</span> <span class="n">dirpath</span> <span class="o">+</span> <span class="s">'/'</span> <span class="o">+</span> <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">"Store"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lab_img</span><span class="p">:</span>  
+            <span class="n">fish_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lab_img</span><span class="p">)</span>
+    <span class="k">break</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span> <span class="ow">in</span> <span class="n">walk</span><span class="p">(</span><span class="n">gob</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">)):</span>
+        <span class="n">gob_img</span> <span class="o">=</span> <span class="n">dirpath</span> <span class="o">+</span> <span class="s">'/'</span> <span class="o">+</span> <span class="n">filenames</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s">"Store"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">gob_img</span><span class="p">:</span>
+            <span class="n">fish_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gob_img</span><span class="p">)</span>
+    <span class="k">break</span></code></pre></figure>
+
+<p>If you’re unfamiliar with the <code class="highlighter-rouge">walk</code> function, it returns three things:</p>
+<ul>
+  <li><em>root (str)</em></li>
+  <li><em>dirs (list)</em></li>
+  <li><em>files (list)</em></li>
+</ul>
+
+<p>The root is the entire path to where the folder you passed into <code class="highlighter-rouge">walk</code> is stored. If I were to run <code class="highlighter-rouge">walk('/Users/leann/Desktop/fish')</code>, my root would be <code class="highlighter-rouge">/Users/leann/Desktop</code>. Dirs refers to any folders within the folder you passed in. So if I had 3 folders in <code class="highlighter-rouge">'/Users/leann/Desktop/fish'</code>, the name of those three folders would be listed. Files is, as you guessed, all the files within <code class="highlighter-rouge">'/Users/leann/Desktop/fish'</code>.</p>
+
+<p>We add <code class="highlighter-rouge">root + '/' + files[i]</code> to get the full path of the image.</p>
+
+<p>It may seem a bit messy to add all of the image paths to one list, but I find it easier to keep track of one list, then pull data out of it to create testing sets. We will also create a separate list of labels, where the indices for the paths list and labels list match.</p>
+
+<p>Next we need to standardize every image and create our classification labels.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">x_train_ordered</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">y_train_ordered</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fish_paths</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="c"># standardize size for prediction step</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="mi">150</span><span class="p">))</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">/</span><span class="mf">255.0</span>
+    <span class="c">#img = img.reshape((1,) + img.shape)</span>
+    <span class="n">x_train_ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s">"Labridae"</span> <span class="ow">in</span> <span class="n">i</span><span class="p">:</span>
+        <span class="n">y_train_ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y_train_ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></code></pre></figure>
+
+<p><code class="highlighter-rouge">cv2.imread()</code> returns 3-dimensional array of pixel values that range from [0-255] (RGB values). We divide each pixel by 255 to normalize the data and improve convergence. If you check the shape of the image, it should be <code class="highlighter-rouge">(150,150,3)</code>, meaning that for each dimension in the 3D array, we have resized the image to 150 by 150 pixels. If we have a 4D array shape <code class="highlighter-rouge">(3,150,150,3)</code>, the first 3 refers to 3 separate images that have the shape <code class="highlighter-rouge">(150,150,3)</code>. We also start appending values to <code class="highlighter-rouge">y_train_ordered</code>; 0 referring to a Labridae fish, and 1 referring to a Gobiidae fish. In order to pass classification values into the CNN, we must use numerical values as labels.</p>
+
+<p><em>NOTE:</em> We are using the variable names <code class="highlighter-rouge">x_train_ordered</code> and <code class="highlighter-rouge">y_train_ordered</code> because the first half of the list is Labridae images, and the second half is Gobiidae. In the next step, we will shuffle the images to make sure that the order of images doesn’t affect the model’s decision making.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">random</span>
+<span class="n">to_shuffle</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_trained_ordered</span><span class="p">))</span>
+<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">to_shuffle</span><span class="p">)</span>
+
+<span class="n">x_train</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">to_shuffle</span><span class="p">:</span>
+    <span class="n">x_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_train_ordered</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">y_train</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_train_ordered</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+<span class="n">test_indices</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_train</span><span class="p">)),</span> <span class="mi">200</span><span class="p">),</span><span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">x_test</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">test_indices</span><span class="p">:</span>
+    <span class="n">x_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_train</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">y_test</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y_train</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+    <span class="k">del</span> <span class="n">x_train</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">y_train</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></code></pre></figure>
+
+<p>In this block, our goals are to:</p>
+
+<ol>
+  <li>Shuffle all of the images and labels in our <code class="highlighter-rouge">x_train_ordered</code> and <code class="highlighter-rouge">y_train_ordered</code> lists so that they still correspond with one another</li>
+  <li>Segment out a portion of our <code class="highlighter-rouge">x_test</code> and <code class="highlighter-rouge">y_test</code> lists to use as testing data</li>
+</ol>
+
+<p>First we shuffle a list of integers that range from 0 to the number of images we have. We will use this shuffled list as a way to index from the original ordered images list. We now create our <em>official</em> <code class="highlighter-rouge">x_train</code> and <code class="highlighter-rouge">y_train</code> lists by appending values from <code class="highlighter-rouge">x_train_ordered</code> and <code class="highlighter-rouge">y_train_ordered</code> using our shuffled indices list. We maintain that the image matches up with the classification label by using the same index for both lists.</p>
+
+<p>Next, we pull from our training data to create a testing set. Usually, testing data is about 10% of the training data, so I decided to pull 200 images. In order to randomly sample 200 images from the training set, we use <code class="highlighter-rouge">random.sample</code> to pick 200 indices at random from <code class="highlighter-rouge">x_train</code> and <strong>order them from greatest to least.</strong> This is an important step, because we need to delete the images that will be used in the testing set from the training set. If the indices are not in a descending order and we deleted an object at index 3 before an object at index 4, we would get and indexing error when trying to delete the object at index 4. This is because we deleted index 3, thus shifting index 4 to index 3’s position.</p>
+
+<p>We’re almost there!</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+
+<span class="n">x_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x_train</span><span class="p">)</span>
+<span class="n">y_train</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">x_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span>
+<span class="n">y_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_test</span><span class="p">)</span></code></pre></figure>
+
+<p>This step is a little silly. It seems that the CNN will only work with numpy arrays, so I had to convert all of my lists. I’m sure we could have just started with arrays from the beginning, but I’m just so much more comfortable working with lists, so I went for those. Feel free to reformat!</p>
+
+<p>And we’ve done it! We’ve finished the data prep, which admittedly took me more time than building the actual CNN. On to the next part.</p>
+
+<h3 id="part-2-actually-building-the-network">Part 2: Actually building the network</h3>
+<p><br /></p>
+
+<p>Thanks to all of the predefined libraries on neural networks out there, this was actually the easiest part of the project.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">Sequential</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Conv2D</span><span class="p">,</span> <span class="n">MaxPooling2D</span>
+<span class="kn">from</span> <span class="nn">keras.layers</span> <span class="kn">import</span> <span class="n">Activation</span><span class="p">,</span> <span class="n">Dropout</span><span class="p">,</span> <span class="n">Flatten</span><span class="p">,</span> <span class="n">Dense</span>
+
+<span class="c"># dimensions of our images.</span>
+<span class="n">img_width</span><span class="p">,</span> <span class="n">img_height</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">150</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span><span class="mi">150</span><span class="p">,</span><span class="mi">3</span><span class="p">)))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="s">'relu'</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="s">'relu'</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Conv2D</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="s">'relu'</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">MaxPooling2D</span><span class="p">(</span><span class="n">pool_size</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Flatten</span><span class="p">())</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="s">'relu'</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dropout</span><span class="p">(</span><span class="mf">0.5</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Activation</span><span class="p">(</span><span class="s">'sigmoid'</span><span class="p">))</span>
+
+<span class="n">model</span><span class="o">.</span><span class="nb">compile</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="s">'mean_squared_error'</span><span class="p">,</span>
+              <span class="n">optimizer</span><span class="o">=</span><span class="s">'rmsprop'</span><span class="p">,</span>
+              <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s">'accuracy'</span><span class="p">])</span></code></pre></figure>
+
+<p>The first three blocks are really intuitive. You can see that we add three convolutions layers using relu activation and three pooling layers. These steps are explained and can be followed in the <a href="https://ujjwalkarn.me/2016/08/11/intuitive-explanation-convnets/" style="color: red">initial tutorial</a> I linked. In the last block, we flatten the number of input nodes to just 1, our prediction output (Dense(1)). We then compile the network using the mean squared error function as the loss function. The loss function can be switched out for another, but the switch will not make a poor classifier any better.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">x_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">validation_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">),</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></code></pre></figure>
+
+<p>And finally we feed the data into the model we built! We provide thee important parameters, <code class="highlighter-rouge">batch_size</code>, <code class="highlighter-rouge">epochs</code>, and <code class="highlighter-rouge">validation_data</code>. Batch size refers to how many images of the total training set the model will take and process at a time. The smaller the batch size, the faster the computer can process it; however, the trade off is that it’s much harder to know when your loss function indicates convergence. The default batch size is 32, so sticking with it isn’t such a bad option. The number of epochs is the number of times the model will run through the entire training set. We use our testing data set as our validation set as unbiased data that will tell us how our model is performing. The validation dataset is <em>not</em> used to train the model, only to provide insight.</p>
+
+<p>You’ll notice that <code class="highlighter-rouge">verbose</code> is also in there. It’s not imperative to fitting the data, but when set to 1, it gives us this nifty status as the model is being trained and helps us understand how our model is doing.</p>
+
+<p><img src="http://localhost:4000/images/fit.png" alt="verbose" width="100%" /></p>
+
+<p>The four metrics the model outputs are loss, accuracy, validation loss, and validation accuracy. It’s intuitive that we want to minimize loss and have a higher accuracy, so we want to see loss and accuracy decreasing and increasing, respectively. We want to see the same pattern for validation loss and validation accuracy. If we see that validation loss keeps increasing while regular loss and accuracy decrease and increase, respectively, then we can assume that we are overfitting. The model is becoming too good at recognizing the training data, and cannot generalize outside of it.</p>
+
+<p>Looking at these metrics is a good way to find the optimal number of epochs for your model. I started out with 10 epochs, and saw that validation loss started increasing instead of decreasing around 8 or 9 epochs, which is how I ended up at 7 epochs.</p>
+
+<h3 id="part-3-evaluating-the-models-accuracy">Part 3: Evaluating the model’s accuracy</h3>
+
+<p>Now that we have the trained model, we can see how effective it is at classifying the testing data.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">confusion_matrix</span>
+
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x_test</span><span class="p">)</span><span class="o">.</span><span class="nb">round</span><span class="p">()</span>
+
+<span class="n">confusion_matrix</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span></code></pre></figure>
+
+<p><code class="highlighter-rouge">model.predict</code> outputs a weighted value between 0 and 1, our classification labels. We use <code class="highlighter-rouge">numpy.round</code> to get integer values to compare the predicted values to the actual values. It also returns a multidimensional array, but in order to use sci-kit learn’s <code class="highlighter-rouge">confusion_matrix</code> function, it has to be 1-dimensional, so we use <code class="highlighter-rouge">np.squeeze</code> to get rid of the second dimension. By using a <a href="https://en.wikipedia.org/wiki/Confusion_matrix" style="color: red">confusion matrix</a>, we can quantify how many correct and incorrect classifications our model output.</p>
+
+<p><img src="http://localhost:4000/images/confusion_matrix.png" alt="confusion_matrix" width="25%" /></p>
+
+<p>113 images were correctly classified as Labridae, and 84 were correctly classified as Gobiidae. 2 images were incorrectly predicted as Labridae, and 1 image was incorrectly classified as Gobiidae. Overall, that’s 98.5% accuracy.</p>
+
+<h3 id="next-steps">Next steps</h3>
+
+<p>We’ve successfully built a running model! Next steps would include analyzing the misclassifications and seeing how to fine tune the model to increase performance accuracy. This tutorial is extremely basic, but focuses on a lot of procedures and concepts that I had to spend a few hours trying to understand. I hope that you find it helpful, and if you have any questions, please feel free to <a href="mailto:leannkwoo@gmail.com" style="color: red">email me</a>. You can find the full code for this tutorial on my <a href="https://github.com/leannw/blog_code/tree/master/Classify%20Images%20With%20A%20CNN" style="color: red">Github</a>. Thanks for reading!</p>
+
+  </div>
+
+</article>
+
+<div class="container mx-auto px-2 py-2 clearfix">
+  <!-- Use if you want to show previous and next for all posts. -->
+
+
+
+  
+
+</div>
+
+    </div>
+
+    <div class="clearfix mt-2 mt-lg-4">
+  <div class="container mx-auto px-2">
+    <p class="col-8 sm-width-full left py-2 mb-0">This project is maintained by <a class="text-accent" href="https://github.com/leannw">leannw</a></p>
+    <ul class="list-reset right clearfix sm-width-full py-2 mb-2 mb-lg-0">
+      <li class="inline-block mr-1">
+        <a href="https://twitter.com/share" class="twitter-share-button" data-hashtags="leann k. woo">Tweet</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+      </li>
+      <li class="inline-block">
+        <a class="github-button" href="https://github.com/leannw/" data-icon="octicon-star" data-count-href="leannw//stargazers" data-count-api="/repos/leannw/#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star leannw/ on GitHub">Star</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+
+  </body>
+
+</html>
