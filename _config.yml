@@ -17,8 +17,7 @@ title: leann k. woo
 email: leannkwoo@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Hi there, I'm LeAnn! I'm currently working as a data analyst at System1 in Venice, California.
-  On the side, I'm a research assistant to Dr. Michael Alfaro at UCLA where we study the phylogeny
-  of all fish that have existed...ever. I'm passionate about making the practical beautiful. And dogs.
+  I'm passionate about building things that enrich the lives of the people I love. And dogs.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://www.leannwoo.com" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: jekyllrb
